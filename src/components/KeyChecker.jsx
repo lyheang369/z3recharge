@@ -13,7 +13,7 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
     setChecked(false)
     
     try {
-      const res = await fetch(`/api/keys/${encodeURIComponent(keyCode)}`)
+      const res = await fetch(`https://toolsmarket.online/api/keys/${encodeURIComponent(keyCode)}`)
       const data = await res.json()
       
       if (data.error) {

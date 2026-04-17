@@ -62,7 +62,7 @@ function App() {
       }
 
       try {
-        const res = await fetch(`/api/keys/${code}/activation`)
+        const res = await fetch(`https://toolsmarket.online/api/keys/${code}/activation`)
         const data = await res.json()
         
         if (data.status === 'activated') {
@@ -102,7 +102,7 @@ function App() {
     setActivationStatus('activating')
 
     try {
-      const res = await fetch('/api/activate', {
+      const res = await fetch('https://toolsmarket.online/api/activate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
