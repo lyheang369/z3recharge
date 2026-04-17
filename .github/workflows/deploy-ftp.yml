@@ -30,7 +30,15 @@ jobs:
 
       - name: Write .htaccess
         run: |
-          printf 'RewriteEngine On\nRewriteRule ^api(/.*)?$ api.php [QSA,L]\n' > dist/.htaccess
+          cat > dist/.htaccess << 'EOF'
+          RewriteEngine On
+          # Route API calls to PHP proxy
+          RewriteRule ^api(/.*)?$ api.php [QSA,L]
+          # SPA fallback: serve index.html for all non-file requests
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteCond %{REQUEST_FILENAME} !-d
+          RewriteRule . index.html [L]
+          EOF
 
       - name: Deploy to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
