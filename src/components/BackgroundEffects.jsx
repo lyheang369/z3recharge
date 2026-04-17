@@ -1,4 +1,6 @@
-export default function BackgroundEffects() {
+import { memo } from 'react'
+
+export default memo(function BackgroundEffects() {
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
       {/* Gradient orbs */}
@@ -19,4 +21,4 @@ export default function BackgroundEffects() {
       />
     </div>
   )
-}
+})

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { apiUrl } from '../utils/api'
 
 export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast }) {
   const [code, setCode] = useState('')
@@ -13,7 +14,7 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
     setChecked(false)
     
     try {
-      const res = await fetch(`https://toolsmarket.online/api/keys/${encodeURIComponent(keyCode)}`)
+      const res = await fetch(apiUrl(`/api/keys/${encodeURIComponent(keyCode)}`))
       const data = await res.json()
       
       if (data.error) {
@@ -29,7 +30,7 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
         showToast(statusMsg, data.status === 'available' ? 'success' : 'info')
       }
       setChecked(true)
-    } catch (err) {
+    } catch {
       showToast('Failed to check key. Please try again.', 'error')
       onKeyChecked(null)
     } finally {

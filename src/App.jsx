@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Header from './components/Header'
 import KeyChecker from './components/KeyChecker'
 import SessionInput from './components/SessionInput'
@@ -6,6 +6,7 @@ import AccountInfo from './components/AccountInfo'
 import RechargeButton from './components/RechargeButton'
 import StatusToast from './components/StatusToast'
 import BackgroundEffects from './components/BackgroundEffects'
+import { apiUrl } from './utils/api'
 
 function App() {
   const [keyData, setKeyData] = useState(null)
@@ -16,9 +17,21 @@ function App() {
   const [isActivating, setIsActivating] = useState(false)
   const [activationStatus, setActivationStatus] = useState(null)
 
+  const toastTimer = useRef(null)
+  const pollController = useRef(null)
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollController.current) pollController.current.abort()
+      if (toastTimer.current) clearTimeout(toastTimer.current)
+    }
+  }, [])
+
   const showToast = useCallback((message, type = 'info') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast({ message, type })
-    setTimeout(() => setToast(null), 4000)
+    toastTimer.current = setTimeout(() => setToast(null), 4000)
   }, [])
 
   const handleKeyChecked = useCallback((data) => {
@@ -50,10 +63,15 @@ function App() {
   }, [extractEmailFromSession])
 
   const pollActivation = useCallback(async (code) => {
-    const maxAttempts = 20
+    if (pollController.current) pollController.current.abort()
+    const controller = new AbortController()
+    pollController.current = controller
+
     let attempts = 0
+    const maxAttempts = 20
 
     const poll = async () => {
+      if (controller.signal.aborted) return
       if (attempts >= maxAttempts) {
         setIsActivating(false)
         setActivationStatus('timeout')
@@ -62,20 +80,24 @@ function App() {
       }
 
       try {
-        const res = await fetch(`https://toolsmarket.online/api/keys/${code}/activation`)
+        const res = await fetch(apiUrl(`/api/keys/${code}/activation`), {
+          signal: controller.signal,
+        })
         const data = await res.json()
-        
+
         if (data.status === 'activated') {
           setIsActivating(false)
           setActivationStatus('activated')
           setKeyData(prev => ({ ...prev, status: 'activated' }))
-          showToast('🎉 Key activated successfully!', 'success')
+          setSessionJson('') // Clear sensitive session data after activation
+          showToast('Key activated successfully!', 'success')
           return
         }
-        
+
         attempts++
         setTimeout(poll, 3000)
-      } catch {
+      } catch (err) {
+        if (err.name === 'AbortError') return
         attempts++
         setTimeout(poll, 3000)
       }
@@ -102,7 +124,7 @@ function App() {
     setActivationStatus('activating')
 
     try {
-      const res = await fetch('https://toolsmarket.online/api/activate', {
+      const res = await fetch(apiUrl('/api/activate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -110,9 +132,9 @@ function App() {
           session: sessionJson
         })
       })
-      
+
       const data = await res.json()
-      
+
       if (data.error) {
         setIsActivating(false)
         setActivationStatus('error')
@@ -122,7 +144,7 @@ function App() {
 
       showToast('Activation started! Monitoring progress...', 'info')
       pollActivation(keyCode)
-    } catch (err) {
+    } catch {
       setIsActivating(false)
       setActivationStatus('error')
       showToast('Failed to activate. Please try again.', 'error')
@@ -132,31 +154,31 @@ function App() {
   return (
     <div className="relative min-h-screen">
       <BackgroundEffects />
-      
+
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
         <Header />
-        
+
         <div className="space-y-5 mt-8">
-          <KeyChecker 
-            onKeyChecked={handleKeyChecked} 
+          <KeyChecker
+            onKeyChecked={handleKeyChecked}
             onKeyCodeChange={handleKeyCodeChange}
             showToast={showToast}
           />
-          
-          <SessionInput 
+
+          <SessionInput
             onSessionChange={handleSessionChange}
             showToast={showToast}
           />
-          
+
           {(accountEmail || keyData) && (
-            <AccountInfo 
-              email={accountEmail} 
+            <AccountInfo
+              email={accountEmail}
               keyData={keyData}
               activationStatus={activationStatus}
             />
           )}
-          
-          <RechargeButton 
+
+          <RechargeButton
             onClick={handleRecharge}
             isActivating={isActivating}
             keyData={keyData}
@@ -164,7 +186,7 @@ function App() {
             hasKey={!!keyCode}
           />
         </div>
-        
+
       </div>
 
       {toast && <StatusToast message={toast.message} type={toast.type} />}

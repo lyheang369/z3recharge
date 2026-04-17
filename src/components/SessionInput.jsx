@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react'
 export default function SessionInput({ onSessionChange, showToast }) {
   const [rawJson, setRawJson] = useState('')
   const [isValid, setIsValid] = useState(null)
-  const [isFormatted, setIsFormatted] = useState(false)
 
   const validateAndSet = useCallback((value) => {
     setRawJson(value)
@@ -28,7 +27,6 @@ export default function SessionInput({ onSessionChange, showToast }) {
       const parsed = JSON.parse(rawJson)
       const formatted = JSON.stringify(parsed, null, 2)
       setRawJson(formatted)
-      setIsFormatted(true)
       setIsValid(true)
       showToast('JSON formatted successfully', 'success')
     } catch {
@@ -47,6 +45,10 @@ export default function SessionInput({ onSessionChange, showToast }) {
     
     if (!file.name.endsWith('.json')) {
       showToast('Please select a JSON file', 'error')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File too large (max 5MB)', 'error')
       return
     }
 
