@@ -1,7 +1,7 @@
 // Unified API base URL
-// Dev: empty string → relative paths go through vite proxy
-// Prod: absolute URL to the API server
-export const API_BASE = import.meta.env.DEV ? '' : 'https://toolsmarket.online'
+// Dev: vite proxy handles /api → toolsmarket.online
+// Prod: /recharge/api → our PHP proxy (avoids CORS)
+export const API_BASE = import.meta.env.DEV ? '' : '/recharge'
 
 export function apiUrl(path) {
   return `${API_BASE}${path}`

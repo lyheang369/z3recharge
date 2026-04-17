@@ -1,0 +1,43 @@
+name: Build & Deploy to Z3RA FTP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Copy PHP proxy to dist
+        run: cp api-proxy.php dist/api.php
+
+      - name: Write .htaccess
+        run: |
+          printf 'RewriteEngine On\nRewriteRule ^api(/.*)?$ api.php [QSA,L]\n' > dist/.htaccess
+
+      - name: Deploy to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: premium906.web-hosting.com
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dist/
+          server-dir: /z3ra.tech/recharge/
+          dangerous-clean-slate: false

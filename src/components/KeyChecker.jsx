@@ -49,7 +49,7 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
     if (value.length >= 3) {
       debounceRef.current = setTimeout(() => {
         checkKey(value)
-      }, 800)
+      }, 400)
     } else {
       onKeyChecked(null)
     }

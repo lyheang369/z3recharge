@@ -95,11 +95,11 @@ function App() {
         }
 
         attempts++
-        setTimeout(poll, 3000)
+        setTimeout(poll, 2000)
       } catch (err) {
         if (err.name === 'AbortError') return
         attempts++
-        setTimeout(poll, 3000)
+        setTimeout(poll, 2000)
       }
     }
 
