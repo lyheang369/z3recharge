@@ -30,13 +30,15 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
         showToast(data.error, 'error')
         onKeyChecked(null)
       } else {
-        onKeyChecked(data)
-        const statusMsg = data.status === 'available'
+        // Normalize status to lowercase for consistent comparisons
+        const normalized = { ...data, status: data.status?.toLowerCase() }
+        onKeyChecked(normalized)
+        const statusMsg = normalized.status === 'available'
           ? '✅ Key is available!'
-          : data.status === 'activated'
+          : normalized.status === 'activated'
             ? '🔵 Key already activated'
-            : `Key status: ${data.status}`
-        showToast(statusMsg, data.status === 'available' ? 'success' : 'info')
+            : `Key status: ${normalized.status}`
+        showToast(statusMsg, normalized.status === 'available' ? 'success' : 'info')
       }
       setChecked(true)
     } catch {
@@ -92,14 +94,14 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
           </div>
         )}
       </div>
-      
+
       <div className="relative">
         <input
           type="text"
           value={code}
           onChange={handleChange}
           placeholder="Enter your CDK key code..."
-          className="w-full bg-dark-800/80 border border-dark-500/50 rounded-xl px-4 py-3 text-sm text-gray-200 
+          className="w-full bg-dark-800/80 border border-dark-500/50 rounded-xl px-4 py-3 text-sm text-gray-200
                      placeholder-gray-600 outline-none transition-all duration-300
                      focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/10 focus:bg-dark-800
                      font-mono tracking-wide"
@@ -110,7 +112,7 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
           <div className="absolute inset-0 rounded-xl animate-shimmer pointer-events-none" />
         )}
       </div>
-      
+
       <p className="text-xs text-gray-600 mt-2 ml-1">
         Auto-checks after you stop typing
       </p>
