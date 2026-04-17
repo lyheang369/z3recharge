@@ -20,7 +20,7 @@ const Loading = () => (
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter basename="/z3recharge">
+    <BrowserRouter basename="/recharge">
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<App />} />
