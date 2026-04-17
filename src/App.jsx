@@ -165,9 +165,6 @@ function App() {
           />
         </div>
         
-        <footer className="mt-12 text-center text-sm text-gray-600">
-          <p>Powered by <span className="gradient-text font-semibold">Tools Market</span> API</p>
-        </footer>
       </div>
 
       {toast && <StatusToast message={toast.message} type={toast.type} />}
