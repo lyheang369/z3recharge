@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { apiUrl } from '../utils/api'
+import { findLinkByZ3RA } from '../utils/keyStore'
 
 export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast }) {
   const [code, setCode] = useState('')
@@ -9,23 +10,31 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
 
   const checkKey = useCallback(async (keyCode) => {
     if (!keyCode || keyCode.length < 3) return
-    
+
     setLoading(true)
     setChecked(false)
-    
+
+    // Resolve Z3RA key to linked CDK key
+    let resolvedKey = keyCode
+    const link = findLinkByZ3RA(keyCode)
+    if (link) {
+      resolvedKey = link.cdkKey
+      onKeyCodeChange(resolvedKey)
+    }
+
     try {
-      const res = await fetch(apiUrl(`/api/keys/${encodeURIComponent(keyCode)}`))
+      const res = await fetch(apiUrl(`/api/keys/${encodeURIComponent(resolvedKey)}`))
       const data = await res.json()
-      
+
       if (data.error) {
         showToast(data.error, 'error')
         onKeyChecked(null)
       } else {
         onKeyChecked(data)
-        const statusMsg = data.status === 'available' 
-          ? '✅ Key is available!' 
-          : data.status === 'activated' 
-            ? '🔵 Key already activated' 
+        const statusMsg = data.status === 'available'
+          ? '✅ Key is available!'
+          : data.status === 'activated'
+            ? '🔵 Key already activated'
             : `Key status: ${data.status}`
         showToast(statusMsg, data.status === 'available' ? 'success' : 'info')
       }
@@ -36,7 +45,7 @@ export default function KeyChecker({ onKeyChecked, onKeyCodeChange, showToast })
     } finally {
       setLoading(false)
     }
-  }, [onKeyChecked, showToast])
+  }, [onKeyChecked, onKeyCodeChange, showToast])
 
   const handleChange = useCallback((e) => {
     const value = e.target.value.trim()
